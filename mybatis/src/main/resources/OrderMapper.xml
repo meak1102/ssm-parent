@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- namespace(命名空间)：映射文件的唯一标识 -->
+<mapper namespace="zhp.mapper.OrderMapper">
+    <!--一对一配置映射-->
+        <resultMap id="orderMapOneToOne" type="Order" autoMapping="true">
+            <id property="id" column="id"></id>
+            <association property="user" autoMapping="true" javaType="User">
+                <id column="user_id" property="id"></id>
+            </association>
+        </resultMap>
+    <select id="queryOrderandUserByOrderNumber" resultMap="orderMapOneToOne">
+          select * from tb_order o LEFT  JOIN tb_user u on
+          o.user_id=u.id where o.order_number=#{orderNumber}
+    </select>
+
+    <!--一对多映射-->
+    <resultMap id="orderMapOneRoMany" type="Order" autoMapping="true">
+        <id property="id" column="id"></id>
+        <association property="user" javaType="User" autoMapping="true">
+            <id column="user_id" property="id"></id>
+        </association>
+        <collection property="listDetail" javaType="List" ofType="Orderdetail" autoMapping="true">
+            <id property="id" column="od_id"></id>
+        </collection>
+
+    </resultMap>
+    <select id="queryOrderAndUserAndOrderByOrderNumber" resultMap="orderMapOneRoMany">
+        select * ,od.id as od_id from tb_order  o LEFT  JOIN tb_user u on o.user_id =u.id
+        LEFT  join tb_orderdetail od on  o.id=od.order_id
+        where o.order_number=#{orderNumber}
+    </select>
+
+    <!--多对多映射-->
+    <resultMap id="orderMapManyToMany" type="Order" autoMapping="true">
+    <id column="id" property="id"></id>
+    <association property="user" javaType="User" autoMapping="true">
+        <id property="id" column="user_id"></id>
+    </association>
+        <collection property="listDetail" javaType="list" ofType="Orderdetail" autoMapping="true">
+            <id column="od_id" property="id"></id>
+            <association property="item" javaType="Item" autoMapping="true">
+                <id property="id" column="item_id"></id>
+            </association>
+        </collection>
+    </resultMap>
+    <select id="queryOrderAndUserAndOrderdetailAndItem" resultMap="orderMapManyToMany">
+        select * ,od.id as od_id from tb_order o LEFT JOIN tb_user u on o.user_id=u.id
+         LEFT  JOIN tb_orderdetail od on od.order_id=o.id
+         LEFT  JOIN tb_item i on i.id=od.item_id where o.order_number=#{orderNumber}
+    </select>
+</mapper>

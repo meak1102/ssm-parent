@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- namespace(命名空间)：映射文件的唯一标识 -->
+<mapper namespace="zhp.mapper.UserMapper">
+    <cache/>
+    <!-- 查询的statement，id：在同一个命名空间下的唯一标识，resultType：sql语句的结果集封装类型 -->
+    <select id="queryUserById" resultType="User">
+        select user_name,password from tb_user where id=#{id}
+    </select>
+    <!--根据表名以及id查询用户
+    #{}：只能作为条件接受参数，不能作为from 后面的表格接受参数
+    ${}:字符拼接
+    -->
+    <select id="queryUserByTableName" resultType="User" >
+        select * from ${tableName} where id=#{id}
+    </select>
+    <!--模糊查詢：注意#{}与${}的区别-->
+    <select id="queryUserLikeUserName"  resultType="User">
+        /*select * from tb_user where user_name like "%${userName}%"*/
+        select * from tb_user where user_name like "%" #{userName} "%"
+    </select>
+
+
+<!--
+ id:唯一标示
+ type：结果集的数据类型
+autoMapping：自动映射
+-->
+    <resultMap id="userMap" type="User" autoMapping="true">
+        <id  column="id" property="id"></id>
+        <result column="user_name" property="userName"></result>
+    </resultMap>
+
+
+    <select id="login" resultMap="userMap">
+        select <include refid="CommonSql.fieldSql"></include>from tb_user where user_name="${userName}" and password ="${password}"
+    </select>
+
+    <select id="queryUserAll" resultType="User">
+        select * from tb_user
+    </select>
+
+
+
+
+
+    <!--动态sql-->
+    <select id="queryUserBySexLikeUserName" resultType="User">
+        select <include refid="CommonSql.fieldSql"></include> from tb_user where sex=1
+        <if test="userName!=null and userName.trim()!=''">
+            and user_name like "%" #{userName} "%"
+        </if>
+    </select>
+    <select id="queryUserByuserNameOrAge" resultType="User">
+        select * from tb_user where sex=1
+        <choose>
+          <when test="userName!=null and userName.trim()!=''">and user_name like "%${userName}%" </when>
+            <when test="age!=null">and age &lt;#{age}</when>
+            <otherwise>
+                and user_name="zhangsan"
+            </otherwise>
+        </choose>
+    </select>
+    <select id="queryAllUserlikeUserNameOrAge" resultType="User">
+        select * from tb_user <where>
+         <if test="userName!=null and userName.trim()!=''"> user_name like "%" #{userName} "%"</if>
+        <if test="age!=null"> and age &lt; #{age}</if>
+    </where>
+    </select>
+    <update id="updateUserBysetTag">
+        update tb_user <set>
+         <if test="userName!=null and userName.trim()!=''"> user_name=#{userName},</if>
+         <if test="password!=null and password.trim()!=''"> password=#{password},</if>
+         <if test="name!=null and name.trim()!=''"> name=#{name},</if>
+         <if test="age!=null"> age=#{age},</if>
+         <if test="sex!=null"> sex=#{sex}</if>
+    </set>
+        where id =#{id}
+    </update>
+    <select id="queryByids" resultType="User">
+        select * from tb_user where id in
+        <foreach collection="ids" item="id" close=")"  separator="," open="(">
+              #{id}
+        </foreach>
+    </select>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <!--
+    id:唯一标示 与方法名一样
+    useGeneratedKeys:主键回显
+    keycolumn:主键列名
+    keyProperty:主键属性名
+    -->
+    <insert id="insertUser" parameterType="User" useGeneratedKeys="true" keyColumn="id" keyProperty="id">
+       INSERT INTO tb_user
+       ( user_name, password, name, age, sex, birthday, created, updated)
+        VALUES
+        (#{userName}, #{password},
+         #{name}, #{age}, #{sex},
+         #{birthday},
+         now(),
+          now());
+    </insert>
+<!-- 面向sql以及dao接口编程，并不是全字段修改i，只针对sql语句的修改-->
+    <update id="updateUser"  parameterType="User">
+        UPDATE tb_user SET
+        user_name=#{userName},
+      password=#{password},
+         name=#{name},
+        age=#{age}, sex=#{sex},
+         birthday=#{birthday},
+         updated=now()  where id=#{id};
+    </update>
+
+    <delete id="deleteUserById" parameterType="long">
+        delete from tb_user where id =#{id}
+    </delete>
+</mapper>
